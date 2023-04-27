@@ -21,19 +21,34 @@ services:
     image: 'movie_api'
     container_name: api
     depends_on:
-      - db
+      db:
+        condition: service_started
+      config-server:
+        condition: service_started
     env_file:
       - .env
     ports:
       - '8080:8080'
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/$DB_NAME
-      - SPRING_DATASOURCE_USERNAME=$DB_USERNAME
-      - SPRING_DATASOURCE_PASSWORD=$DB_PASSWORD
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/$DB_NAME
+      SPRING_DATASOURCE_USERNAME: $DB_USERNAME
+      SPRING_DATASOURCE_PASSWORD: $DB_PASSWORD
+      CONFIGSERVER_URI: "http://configserver:8071"
+      CONFIGSERVER_PORT: "8071"
     links:
       - db
     networks:
       - api
+
+  config-server:
+    image: 'api_config-server'
+    ports:
+      - '8071:8071'
+    networks:
+      api:
+        aliases:
+          - "configserver"
+
 
 networks:
   api:
