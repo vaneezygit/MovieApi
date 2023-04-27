@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    image: 'postgres'
+    restart: always
+    env_file:
+      - .env
+    container_name: db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5433:5432'
+    environment:
+      - POSTGRES_DB=$DB_NAME
+      - POSTGRES_USER=$DB_USERNAME
+      - POSTGRES_PASSWORD=$DB_PASSWORD
+    networks:
+      - api
+  app:
+    image: 'movie_api'
+    container_name: api
+    depends_on:
+      - db
+    env_file:
+      - .env
+    ports:
+      - '8080:8080'
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/$DB_NAME
+      - SPRING_DATASOURCE_USERNAME=$DB_USERNAME
+      - SPRING_DATASOURCE_PASSWORD=$DB_PASSWORD
+    links:
+      - db
+    networks:
+      - api
+
+networks:
+  api:
+    name: api-network
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
